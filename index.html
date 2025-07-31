@@ -120,6 +120,9 @@
             <li>
               <a href="#fm" class="list-select"><b>Flow Matching(FM)</b></a>
             </li>
+            <li>
+              <a href="#discriminative" class="list-select"><b>Empowering Discriminative Models</b></a>
+            </li>
           </ul>
         </div>
       </div>
@@ -160,7 +163,11 @@
             <img src="data/framework.png" class="w-2/3"></img>
           </div>
           <p>
-            Our approach to aligning generative speech restoration models is centered around a <b>multi-metric preference alignment</b> strategy, which is illustrated above. This strategy involves two key stages: first, the construction of a high-quality preference dataset, and second, the application of Direct Preference Optimization (DPO) to align the model with these preferences. This approach is designed to be model-agnostic, allowing it to be applied to any generative restoration model.
+            Our approach to aligning generative speech restoration models is centered around a <b>multi-metric
+              preference alignment</b> strategy, which is illustrated above. This strategy involves two key stages:
+            first, the construction of a high-quality preference dataset, and second, the application of Direct
+            Preference Optimization (DPO) to align the model with these preferences. This approach is designed to be
+            model-agnostic, allowing it to be applied to any generative restoration model.
           </p>
         </div>
 
@@ -171,7 +178,8 @@
         <!-- Autoregressive(AR) Section -->
         <div class="mt-8 mb-8" id="ar">
           <h5>Autoregressive(AR)</h5>
-          AR models generate clean speech token by token in sequence, optimizing cross-entropy loss over the ground-truth sequence.
+          AR models generate clean speech token by token in sequence, optimizing cross-entropy loss over the
+          ground-truth sequence.
           <!-- Tabs -->
           <div class="mb-4 border-b border-gray-200">
             <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="ar-tabs" role="tablist">
@@ -349,7 +357,8 @@
 
                     </tbody>
                   </table>
-                  * Clean audios contain reverb (DNS focuses solely on denoising, while speech restoration also handle dereverberation)
+                  * Clean audios contain reverb (DNS focuses solely on denoising, while speech restoration also handle
+                  dereverberation)
                 </div>
               </div>
             </div>
@@ -678,7 +687,8 @@
         <!-- Masked Generative Model(MGM) Section -->
         <div class="mt-8 mb-8" id="mgm">
           <h5>Masked Generative Model(MGM)</h5>
-          MGM models restore clean speech from partially masked inputs by predicting original tokens, using a masked language modeling objective.
+          MGM models restore clean speech from partially masked inputs by predicting original tokens, using a masked
+          language modeling objective.
           <!-- Tabs -->
           <div class="mb-4 border-b border-gray-200">
             <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="mgm-tabs" role="tablist">
@@ -846,7 +856,8 @@
 
                     </tbody>
                   </table>
-                  * Clean audios contain reverb (DNS focuses solely on denoising, while speech restoration also handle dereverberation)
+                  * Clean audios contain reverb (DNS focuses solely on denoising, while speech restoration also handle
+                  dereverberation)
                 </div>
               </div>
             </div>
@@ -1156,7 +1167,8 @@
         <!-- Flow Matching(FM) Section -->
         <div class="mt-8 mb-8" id="fm">
           <h5>Flow Matching(FM)</h5>
-          FM models learn a velocity field that maps noise to clean speech along a continuous path, minimizing the difference between predicted and true flow directions.
+          FM models learn a velocity field that maps noise to clean speech along a continuous path, minimizing the
+          difference between predicted and true flow directions.
           <!-- Tabs -->
           <div class="mb-4 border-b border-gray-200">
             <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="fm-tabs" role="tablist">
@@ -1324,7 +1336,8 @@
 
                     </tbody>
                   </table>
-                  * Clean audios contain reverb (DNS focuses solely on denoising, while speech restoration also handle dereverberation)
+                  * Clean audios contain reverb (DNS focuses solely on denoising, while speech restoration also handle
+                  dereverberation)
                 </div>
               </div>
             </div>
@@ -1631,6 +1644,211 @@
           </div>
         </div>
 
+        <div class="mt-8 mb-8" id="discriminative">
+          <h5>Application: Empowering Discriminative Models via Pseudo-Labeling</h5>
+          To showcase the practical utility of our aligned models, we explore their potential as ''data annotators'' in
+          a scenario where ground-truth is scarce: real-world singing voice restoration. We took a standard
+          discriminative restoration model, Voicefixer, and fine-tuned it on a set of singing recordings. The key
+          difference is that the ''clean'' supervision signals were not ground-truth recordings, but pseudo-labels
+          generated by our DPO-enhanced AnyEnhance model.
+        </div>
+
+        <div class="w-full overflow-x-auto">
+          <div class="relative w-[900px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+            <table class="demo-table">
+              <thead>
+                <tr>
+                  <th style="width: 33%;">Raw Recording (Noisy)</th>
+                  <th style="width: 33%;">Initial Voicefixer Output</th>
+                  <th style="width: 33%;">Output After Pseudo-Label Fine-Tuning</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- "jiangyibo-just the two of us-楼梯间-麦克风_part_19.wav", "jiangyibo-just the two of us-琴房-手机_part_5.wav", "jiangyibo-just the two of us-琴房-手机_part_6.wav", "jiangyibo-just the two of us-路边-手机_part_21.wav", "maiqihua-这世界有那么多人-公园-手机_part_28.wav", "maiqihua-这世界有那么多人-公园-麦克风_part_7.wav", "maiqihua-这世界有那么多人-游戏厅-麦克风_part_1.wav", "maiqihua-这世界有那么多人-游戏厅-麦克风_part_9.wav",  -->
+                <!-- Sample: jiangyibo-just the two of us-楼梯间-麦克风_part_19 -->
+                <tr class="spec-row">
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/jiangyibo-just the two of us-楼梯间-麦克风_part_19.png"
+                      alt="Noisy Spec"></td>
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/jiangyibo-just the two of us-楼梯间-麦克风_part_19.png"
+                      alt="Before Spec"></td>
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/jiangyibo-just the two of us-楼梯间-麦克风_part_19.png"
+                      alt="After Spec"></td>
+                </tr>
+                <tr>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/jiangyibo-just the two of us-楼梯间-麦克风_part_19.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/jiangyibo-just the two of us-楼梯间-麦克风_part_19.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/jiangyibo-just the two of us-楼梯间-麦克风_part_19.wav"></audio>
+                  </td>
+                </tr>
+
+                <!-- Sample: jiangyibo-just the two of us-琴房-手机_part_5 -->
+                <tr class="spec-row">
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/jiangyibo-just the two of us-琴房-手机_part_5.png"
+                      alt="Noisy Spec"></td>
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/jiangyibo-just the two of us-琴房-手机_part_5.png"
+                      alt="Before Spec"></td>
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/jiangyibo-just the two of us-琴房-手机_part_5.png"
+                      alt="After Spec"></td>
+                </tr>
+                <tr>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/jiangyibo-just the two of us-琴房-手机_part_5.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/jiangyibo-just the two of us-琴房-手机_part_5.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/jiangyibo-just the two of us-琴房-手机_part_5.wav"></audio>
+                  </td>
+                </tr>
+
+                <!-- Sample: jiangyibo-just the two of us-琴房-手机_part_6 -->
+                <tr class="spec-row">
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/jiangyibo-just the two of us-琴房-手机_part_6.png"
+                      alt="Noisy Spec"></td>
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/jiangyibo-just the two of us-琴房-手机_part_6.png"
+                      alt="Before Spec"></td>
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/jiangyibo-just the two of us-琴房-手机_part_6.png"
+                      alt="After Spec"></td>
+                </tr>
+                <tr>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/jiangyibo-just the two of us-琴房-手机_part_6.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/jiangyibo-just the two of us-琴房-手机_part_6.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/jiangyibo-just the two of us-琴房-手机_part_6.wav"></audio>
+                  </td>
+                </tr>
+
+                <!-- Sample: jiangyibo-just the two of us-路边-手机_part_21 -->
+                <tr class="spec-row">
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/jiangyibo-just the two of us-路边-手机_part_21.png"
+                      alt="Noisy Spec"></td>
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/jiangyibo-just the two of us-路边-手机_part_21.png"
+                      alt="Before Spec"></td>
+                  <td><img
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/jiangyibo-just the two of us-路边-手机_part_21.png"
+                      alt="After Spec"></td>
+                </tr>
+                <tr>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/jiangyibo-just the two of us-路边-手机_part_21.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/jiangyibo-just the two of us-路边-手机_part_21.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/jiangyibo-just the two of us-路边-手机_part_21.wav"></audio>
+                  </td>
+                </tr>
+
+                <!-- Sample: maiqihua-这世界有那么多人-公园-手机_part_28 -->
+                <tr class="spec-row">
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/noisy/maiqihua-这世界有那么多人-公园-手机_part_28.png"
+                      alt="Noisy Spec"></td>
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/before/maiqihua-这世界有那么多人-公园-手机_part_28.png"
+                      alt="Before Spec"></td>
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/after/maiqihua-这世界有那么多人-公园-手机_part_28.png"
+                      alt="After Spec"></td>
+                </tr>
+                <tr>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/maiqihua-这世界有那么多人-公园-手机_part_28.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/maiqihua-这世界有那么多人-公园-手机_part_28.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/maiqihua-这世界有那么多人-公园-手机_part_28.wav"></audio>
+                  </td>
+                </tr>
+
+                <!-- Sample: maiqihua-这世界有那么多人-公园-麦克风_part_7 -->
+                <tr class="spec-row">
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/noisy/maiqihua-这世界有那么多人-公园-麦克风_part_7.png"
+                      alt="Noisy Spec"></td>
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/before/maiqihua-这世界有那么多人-公园-麦克风_part_7.png"
+                      alt="Before Spec"></td>
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/after/maiqihua-这世界有那么多人-公园-麦克风_part_7.png"
+                      alt="After Spec"></td>
+                </tr>
+                <tr>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/maiqihua-这世界有那么多人-公园-麦克风_part_7.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/maiqihua-这世界有那么多人-公园-麦克风_part_7.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/maiqihua-这世界有那么多人-公园-麦克风_part_7.wav"></audio>
+                  </td>
+                </tr>
+
+                <!-- Sample: maiqihua-这世界有那么多人-游戏厅-麦克风_part_1 -->
+                <tr class="spec-row">
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/noisy/maiqihua-这世界有那么多人-游戏厅-麦克风_part_1.png"
+                      alt="Noisy Spec"></td>
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/before/maiqihua-这世界有那么多人-游戏厅-麦克风_part_1.png"
+                      alt="Before Spec"></td>
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/after/maiqihua-这世界有那么多人-游戏厅-麦克风_part_1.png"
+                      alt="After Spec"></td>
+                </tr>
+                <tr>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/maiqihua-这世界有那么多人-游戏厅-麦克风_part_1.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/maiqihua-这世界有那么多人-游戏厅-麦克风_part_1.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/maiqihua-这世界有那么多人-游戏厅-麦克风_part_1.wav"></audio>
+                  </td>
+                </tr>
+
+                <!-- Sample: maiqihua-这世界有那么多人-游戏厅-麦克风_part_9 -->
+                <tr class="spec-row">
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/noisy/maiqihua-这世界有那么多人-游戏厅-麦克风_part_9.png"
+                      alt="Noisy Spec"></td>
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/before/maiqihua-这世界有那么多人-游戏厅-麦克风_part_9.png"
+                      alt="Before Spec"></td>
+                  <td><img src="data/Voicefixer/Singing-Recording-Noisy/after/maiqihua-这世界有那么多人-游戏厅-麦克风_part_9.png"
+                      alt="After Spec"></td>
+                </tr>
+                <tr>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/noisy/maiqihua-这世界有那么多人-游戏厅-麦克风_part_9.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/before/maiqihua-这世界有那么多人-游戏厅-麦克风_part_9.wav"></audio>
+                  </td>
+                  <td><audio controls
+                      src="data/Voicefixer/Singing-Recording-Noisy/after/maiqihua-这世界有那么多人-游戏厅-麦克风_part_9.wav"></audio>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
