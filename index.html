@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>GenSR-Pref</title>
+  <script src="./static/tailwind.js"></script>
+  <!-- <script src="./static/vue.global.js"></script> -->
+  <script src="./static/flowbite.min.js"></script>
+  <!-- <script src="./static/d3.v7.min.js"></script> -->
+  <!-- <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script> -->
+
+  <style type="text/tailwindcss">
+    @tailwind base;
+    @tailwind components;
+    @tailwind utilities;
+
+    @layer base {
+      a[href^="http"] {
+        @apply text-blue-500;
+      }
+
+      a:hover {
+        @apply text-blue-700 underline;
+      }
+
+      h1 {
+        @apply mb-6 text-4xl font-bold text-gray-900 text-center;
+      }
+
+      h2 {
+        @apply mb-3 pt-4 text-2xl font-bold tracking-tight text-gray-900;
+      }
+
+      h4 {
+        @apply mb-4 pt-12 text-3xl font-semibold text-gray-900;
+      }
+
+      h5 {
+        @apply mb-3 pt-4 text-2xl font-bold tracking-tight text-gray-900;
+      }
+
+      p {
+        @apply mb-4 font-normal text-gray-900 leading-relaxed;
+      }
+    }
+
+    @layer components {
+      .list-select {
+        @apply block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0;
+      }
+
+      .tooltip {
+        position: absolute;
+        text-align: center;
+        padding: 8px;
+        font: 12px sans-serif;
+        background: lightsteelblue;
+        border: 0;
+        border-radius: 8px;
+        pointer-events: none;
+        opacity: 0;
+      }
+
+      .text-p {
+        @apply mb-4 font-normal text-gray-900 leading-relaxed;
+      }
+
+      .author {
+        @apply font-medium mr-2 pb-1 text-gray-900 inline-block;
+      }
+
+      .affiliation {
+        @apply font-medium mr-2 pb-1 text-gray-900 block;
+      }
+    }
+  </style>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {}
+        }
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div id="app">
+
+    <nav class="bg-white fixed w-full z-20 top-0 start-0 border-gray-200 border-b border-gray-200"
+      style="font-weight: bold;">
+      <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-3">
+        <button data-collapse-toggle="navbar-default" type="button"
+          class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+          aria-controls="navbar-default" aria-expanded="false">
+          <span class="sr-only">Open main menu</span>
+          <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M1 1h15M1 7h15M1 13h15" />
+          </svg>
+        </button>
+
+        <div class="hidden w-full md:block md:w-auto ml-auto" id="navbar-default">
+          <ul
+            class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white">
+            <li>
+              <a href="#home" class="list-select"><b>Home</b></a>
+            </li>
+            <li>
+              <a href="#ar" class="list-select"><b>Autoregressive(AR)</b></a>
+            </li>
+            <li>
+              <a href="#mgm" class="list-select"><b>Masked Generative Model(MGM)</b></a>
+            </li>
+            <li>
+              <a href="#fm" class="list-select"><b>Flow Matching(FM)</b></a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+
+    <div class="p-5 md:p-0 mt-16 max-w-screen-xl mx-auto">
+      <div class="p-6" id="home">
+        <div class="mt-8 mb-8">
+          <h1>Multi-Metric Preference Alignment for Generative Speech Restoration</h1>
+        </div>
+
+        <div class="max-w-[900px] mx-auto mt-8 mb-8">
+          <h2>Abstract</h2>
+          <p class="text-p">
+            Recent generative models have significantly advanced speech restoration tasks, yet their training objectives
+            often misalign with human perceptual preferences, resulting in suboptimal quality. While post-training
+            alignment has proven effective in other generative domains like text and image generation, its application
+            to generative speech restoration remains largely under-explored. This work investigates the challenges of
+            applying preference-based post-training to this task, focusing on how to define a robust preference signal
+            and curate high-quality data to avoid reward hacking. To address these challenges, we propose a
+            <b>multi-metric preference alignment strategy</b>. We construct a new dataset, <b><i>GenSR-Pref</i></b>,
+            comprising 80K preference pairs, where each chosen sample is unanimously favored by a complementary suite of
+            metrics covering perceptual quality, signal fidelity, content consistency, and timbre preservation. This
+            principled approach ensures a holistic preference signal. Applying Direct Preference Optimization (DPO) with
+            our dataset, we observe consistent and significant performance gains across three diverse generative
+            paradigms: autoregressive models (<b>AR</b>), masked generative models (<b>MGM</b>), and flow-matching
+            models (<b>FM</b>) on various restoration benchmarks, in both objective and subjective evaluations. Ablation
+            studies confirm the superiority of our multi-metric strategy over single-metric approaches in mitigating
+            reward hacking. Furthermore, we demonstrate that our aligned models can serve as powerful ''data
+            annotators'', generating high-quality pseudo-labels to serve as a supervision signal for traditional
+            discriminative models in data-scarce scenarios like singing voice restoration.
+          </p>
+        </div>
+
+        <div class="mt-8 mb-8" id="gallery">
+          <div class="flex mx-auto justify-center max-w-screen-lg gap-8 py-8">
+            <img src="data/framework.png" class="w-2/3"></img>
+          </div>
+          <p>
+            Our approach to aligning generative speech restoration models is centered around a <b>multi-metric preference alignment</b> strategy, which is illustrated above. This strategy involves two key stages: first, the construction of a high-quality preference dataset, and second, the application of Direct Preference Optimization (DPO) to align the model with these preferences. This approach is designed to be model-agnostic, allowing it to be applied to any generative restoration model.
+          </p>
+        </div>
+
+        <div class="mt-8 mb-8" id="demo-audio">
+          <h4>Demo Audio</h4>
+        </div>
+
+        <!-- Autoregressive(AR) Section -->
+        <div class="mt-8 mb-8" id="ar">
+          <h5>Autoregressive(AR)</h5>
+          AR models generate clean speech token by token in sequence, optimizing cross-entropy loss over the ground-truth sequence.
+          <!-- Tabs -->
+          <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="ar-tabs" role="tablist">
+              <li class="me-2" role="presentation">
+                <button class="ar-tab-btn inline-block p-4 border-b-2 rounded-t-lg" type="button" role="tab"
+                  onclick="showDataset('ar', 'dns', this)">DNS-With-Reverb</button>
+              </li>
+              <li class="me-2" role="presentation">
+                <button class="ar-tab-btn inline-block p-4 border-b-2 rounded-t-lg" type="button" role="tab"
+                  onclick="showDataset('ar', 'librivox', this)">Librivox-GSR</button>
+              </li>
+              <li class="me-2" role="presentation">
+                <button class="ar-tab-btn inline-block p-4 border-b-2 rounded-t-lg" type="button" role="tab"
+                  onclick="showDataset('ar', 'voicefixer', this)">Voicefixer-GSR</button>
+              </li>
+            </ul>
+          </div>
+          <!-- Tab Content -->
+          <div id="ar-tab-content">
+            <div id="ar-dns" class="ar-dataset-content hidden">
+              <div class="w-full overflow-x-auto">
+                <div class="relative w-[1000px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+                  <table class="demo-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 25%;">Noisy</th>
+                        <th style="width: 25%;">w/ Align</th>
+                        <th style="width: 25%;">w/o Align</th>
+                        <th style="width: 25%;">Clean*</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+
+                      <!-- clean_fileid_113.wav clean_fileid_117.wav clean_fileid_132.wav clean_fileid_145.wav clean_fileid_20.wav clean_fileid_207.wav clean_fileid_241.wav clean_fileid_243.wav clean_fileid_288.wav clean_fileid_50.wav  -->
+                      <!-- Sample: clean_fileid_113 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/DNS-With-Reverb/noisy/clean_fileid_113.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/after/clean_fileid_113.png" alt="After Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/before/clean_fileid_113.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/clean/clean_fileid_113.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/noisy/clean_fileid_113.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/after/clean_fileid_113.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/before/clean_fileid_113.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/clean/clean_fileid_113.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: clean_fileid_117 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/DNS-With-Reverb/noisy/clean_fileid_117.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/after/clean_fileid_117.png" alt="After Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/before/clean_fileid_117.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/clean/clean_fileid_117.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/noisy/clean_fileid_117.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/after/clean_fileid_117.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/before/clean_fileid_117.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/clean/clean_fileid_117.wav"></audio></td>
+                      </tr>
+
+
+                      <!-- Sample: clean_fileid_132 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/DNS-With-Reverb/noisy/clean_fileid_132.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/after/clean_fileid_132.png" alt="After Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/before/clean_fileid_132.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/clean/clean_fileid_132.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/noisy/clean_fileid_132.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/after/clean_fileid_132.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/before/clean_fileid_132.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/clean/clean_fileid_132.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: clean_fileid_145 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/DNS-With-Reverb/noisy/clean_fileid_145.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/after/clean_fileid_145.png" alt="After Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/before/clean_fileid_145.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/clean/clean_fileid_145.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/noisy/clean_fileid_145.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/after/clean_fileid_145.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/before/clean_fileid_145.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/clean/clean_fileid_145.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: clean_fileid_20 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/DNS-With-Reverb/noisy/clean_fileid_20.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/after/clean_fileid_20.png" alt="After Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/before/clean_fileid_20.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/clean/clean_fileid_20.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/noisy/clean_fileid_20.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/after/clean_fileid_20.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/before/clean_fileid_20.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/clean/clean_fileid_20.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: clean_fileid_207 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/DNS-With-Reverb/noisy/clean_fileid_207.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/after/clean_fileid_207.png" alt="After Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/before/clean_fileid_207.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/clean/clean_fileid_207.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/noisy/clean_fileid_207.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/after/clean_fileid_207.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/before/clean_fileid_207.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/clean/clean_fileid_207.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: clean_fileid_241 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/DNS-With-Reverb/noisy/clean_fileid_241.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/after/clean_fileid_241.png" alt="After Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/before/clean_fileid_241.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/clean/clean_fileid_241.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/noisy/clean_fileid_241.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/after/clean_fileid_241.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/before/clean_fileid_241.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/clean/clean_fileid_241.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: clean_fileid_243 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/DNS-With-Reverb/noisy/clean_fileid_243.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/after/clean_fileid_243.png" alt="After Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/before/clean_fileid_243.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/clean/clean_fileid_243.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/noisy/clean_fileid_243.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/after/clean_fileid_243.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/before/clean_fileid_243.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/clean/clean_fileid_243.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: clean_fileid_288 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/DNS-With-Reverb/noisy/clean_fileid_288.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/after/clean_fileid_288.png" alt="After Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/before/clean_fileid_288.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/clean/clean_fileid_288.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/noisy/clean_fileid_288.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/after/clean_fileid_288.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/before/clean_fileid_288.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/clean/clean_fileid_288.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: clean_fileid_50 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/DNS-With-Reverb/noisy/clean_fileid_50.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/after/clean_fileid_50.png" alt="After Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/before/clean_fileid_50.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/DNS-With-Reverb/clean/clean_fileid_50.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/noisy/clean_fileid_50.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/after/clean_fileid_50.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/before/clean_fileid_50.wav"></audio></td>
+                        <td><audio controls src="data/AR/DNS-With-Reverb/clean/clean_fileid_50.wav"></audio></td>
+                      </tr>
+
+                    </tbody>
+                  </table>
+                  * Clean audios contain reverb (DNS focuses solely on denoising, while speech restoration also handle dereverberation)
+                </div>
+              </div>
+            </div>
+            <div id="ar-librivox" class="ar-dataset-content hidden">
+              <div class="w-full overflow-x-auto">
+                <div class="relative w-[1000px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+                  <table class="demo-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 25%;">Noisy</th>
+                        <th style="width: 25%;">w/ Align</th>
+                        <th style="width: 25%;">w/o Align</th>
+                        <th style="width: 25%;">Clean</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- 15.wav 164.wav 177.wav 232.wav 244.wav 282.wav 291.wav 448.wav 497.wav 74.wav  -->
+                      <!-- Sample: 15 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Librivox-GSR/noisy/15.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/after/15.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/before/15.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/clean/15.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Librivox-GSR/noisy/15.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/after/15.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/before/15.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/clean/15.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 164 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Librivox-GSR/noisy/164.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/after/164.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/before/164.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/clean/164.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Librivox-GSR/noisy/164.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/after/164.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/before/164.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/clean/164.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 177 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Librivox-GSR/noisy/177.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/after/177.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/before/177.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/clean/177.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Librivox-GSR/noisy/177.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/after/177.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/before/177.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/clean/177.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 232 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Librivox-GSR/noisy/232.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/after/232.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/before/232.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/clean/232.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Librivox-GSR/noisy/232.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/after/232.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/before/232.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/clean/232.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 244 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Librivox-GSR/noisy/244.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/after/244.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/before/244.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/clean/244.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Librivox-GSR/noisy/244.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/after/244.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/before/244.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/clean/244.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 282 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Librivox-GSR/noisy/282.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/after/282.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/before/282.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/clean/282.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Librivox-GSR/noisy/282.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/after/282.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/before/282.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/clean/282.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 291 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Librivox-GSR/noisy/291.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/after/291.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/before/291.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/clean/291.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Librivox-GSR/noisy/291.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/after/291.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/before/291.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/clean/291.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 448 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Librivox-GSR/noisy/448.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/after/448.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/before/448.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/clean/448.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Librivox-GSR/noisy/448.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/after/448.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/before/448.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/clean/448.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 497 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Librivox-GSR/noisy/497.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/after/497.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/before/497.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/clean/497.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Librivox-GSR/noisy/497.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/after/497.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/before/497.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/clean/497.wav"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 74 -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Librivox-GSR/noisy/74.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/after/74.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/before/74.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Librivox-GSR/clean/74.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Librivox-GSR/noisy/74.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/after/74.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/before/74.wav"></audio></td>
+                        <td><audio controls src="data/AR/Librivox-GSR/clean/74.wav"></audio></td>
+                      </tr>
+
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div id="ar-voicefixer" class="ar-dataset-content hidden">
+              <div class="w-full overflow-x-auto">
+                <div class="relative w-[1000px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+                  <table class="demo-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 25%;">Noisy</th>
+                        <th style="width: 25%;">w/ Align</th>
+                        <th style="width: 25%;">w/o Align</th>
+                        <th style="width: 25%;">Clean</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- 178_simulated.flac 212_simulated.flac 222_simulated.flac 299_simulated.flac 305_simulated.flac 314_simulated.flac 350_simulated.flac 360_simulated.flac 368_simulated.flac 85_simulated.flac  -->
+                      <!-- Sample: 178_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Voicefixer-GSR/noisy/178_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/after/178_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/before/178_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/clean/178_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/noisy/178_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/after/178_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/before/178_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/clean/178_simulated.flac"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 212_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Voicefixer-GSR/noisy/212_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/after/212_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/before/212_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/clean/212_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/noisy/212_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/after/212_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/before/212_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/clean/212_simulated.flac"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 222_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Voicefixer-GSR/noisy/222_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/after/222_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/before/222_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/clean/222_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/noisy/222_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/after/222_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/before/222_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/clean/222_simulated.flac"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 299_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Voicefixer-GSR/noisy/299_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/after/299_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/before/299_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/clean/299_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/noisy/299_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/after/299_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/before/299_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/clean/299_simulated.flac"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 305_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Voicefixer-GSR/noisy/305_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/after/305_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/before/305_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/clean/305_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/noisy/305_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/after/305_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/before/305_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/clean/305_simulated.flac"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 314_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Voicefixer-GSR/noisy/314_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/after/314_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/before/314_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/clean/314_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/noisy/314_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/after/314_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/before/314_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/clean/314_simulated.flac"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 350_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Voicefixer-GSR/noisy/350_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/after/350_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/before/350_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/clean/350_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/noisy/350_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/after/350_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/before/350_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/clean/350_simulated.flac"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 360_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Voicefixer-GSR/noisy/360_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/after/360_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/before/360_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/clean/360_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/noisy/360_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/after/360_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/before/360_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/clean/360_simulated.flac"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 368_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Voicefixer-GSR/noisy/368_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/after/368_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/before/368_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/clean/368_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/noisy/368_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/after/368_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/before/368_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/clean/368_simulated.flac"></audio></td>
+                      </tr>
+
+                      <!-- Sample: 85_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/AR/Voicefixer-GSR/noisy/85_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/after/85_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/before/85_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/AR/Voicefixer-GSR/clean/85_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/noisy/85_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/after/85_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/before/85_simulated.flac"></audio></td>
+                        <td><audio controls src="data/AR/Voicefixer-GSR/clean/85_simulated.flac"></audio></td>
+                      </tr>
+
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Masked Generative Model(MGM) Section -->
+        <div class="mt-8 mb-8" id="mgm">
+          <h5>Masked Generative Model(MGM)</h5>
+          MGM models restore clean speech from partially masked inputs by predicting original tokens, using a masked language modeling objective.
+          <!-- Tabs -->
+          <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="mgm-tabs" role="tablist">
+              <li class="me-2" role="presentation">
+                <button class="mgm-tab-btn inline-block p-4 border-b-2 rounded-t-lg" type="button" role="tab"
+                  onclick="showDataset('mgm', 'dns', this)">DNS-With-Reverb</button>
+              </li>
+              <li class="me-2" role="presentation">
+                <button class="mgm-tab-btn inline-block p-4 border-b-2 rounded-t-lg" type="button" role="tab"
+                  onclick="showDataset('mgm', 'librivox', this)">Librivox-GSR</button>
+              </li>
+              <li class="me-2" role="presentation">
+                <button class="mgm-tab-btn inline-block p-4 border-b-2 rounded-t-lg" type="button" role="tab"
+                  onclick="showDataset('mgm', 'voicefixer', this)">Voicefixer-GSR</button>
+              </li>
+            </ul>
+          </div>
+          <!-- Tab Content -->
+          <div id="mgm-tab-content">
+            <div id="mgm-dns" class="mgm-dataset-content hidden">
+              <div class="w-full overflow-x-auto">
+                <div class="relative w-[1000px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+                  <table class="demo-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 25%;">Noisy</th>
+                        <th style="width: 25%;">w/ Align</th>
+                        <th style="width: 25%;">w/o Align</th>
+                        <th style="width: 25%;">Clean*</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+
+                      <!-- clean_fileid_118.wav clean_fileid_137.wav clean_fileid_14.wav clean_fileid_205.wav clean_fileid_274.wav clean_fileid_287.wav clean_fileid_43.wav clean_fileid_45.wav clean_fileid_73.wav clean_fileid_89.wav   -->
+                      <!-- Sample: clean_fileid_118 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_118.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/after/clean_fileid_118.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/before/clean_fileid_118.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/clean/clean_fileid_118.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_118.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/after/clean_fileid_118.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/before/clean_fileid_118.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/clean/clean_fileid_118.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_137 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_137.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/after/clean_fileid_137.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/before/clean_fileid_137.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/clean/clean_fileid_137.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_137.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/after/clean_fileid_137.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/before/clean_fileid_137.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/clean/clean_fileid_137.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_14 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_14.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/after/clean_fileid_14.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/before/clean_fileid_14.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/clean/clean_fileid_14.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_14.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/after/clean_fileid_14.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/before/clean_fileid_14.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/clean/clean_fileid_14.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_205 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_205.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/after/clean_fileid_205.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/before/clean_fileid_205.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/clean/clean_fileid_205.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_205.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/after/clean_fileid_205.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/before/clean_fileid_205.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/clean/clean_fileid_205.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_274 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_274.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/after/clean_fileid_274.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/before/clean_fileid_274.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/clean/clean_fileid_274.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_274.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/after/clean_fileid_274.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/before/clean_fileid_274.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/clean/clean_fileid_274.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_287 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_287.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/after/clean_fileid_287.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/before/clean_fileid_287.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/clean/clean_fileid_287.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_287.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/after/clean_fileid_287.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/before/clean_fileid_287.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/clean/clean_fileid_287.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_43 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_43.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/after/clean_fileid_43.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/before/clean_fileid_43.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/clean/clean_fileid_43.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_43.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/after/clean_fileid_43.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/before/clean_fileid_43.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/clean/clean_fileid_43.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_45 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_45.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/after/clean_fileid_45.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/before/clean_fileid_45.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/clean/clean_fileid_45.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_45.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/after/clean_fileid_45.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/before/clean_fileid_45.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/clean/clean_fileid_45.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_73 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_73.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/after/clean_fileid_73.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/before/clean_fileid_73.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/clean/clean_fileid_73.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_73.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/after/clean_fileid_73.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/before/clean_fileid_73.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/clean/clean_fileid_73.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_89 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_89.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/after/clean_fileid_89.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/before/clean_fileid_89.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/DNS-With-Reverb/clean/clean_fileid_89.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/noisy/clean_fileid_89.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/after/clean_fileid_89.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/before/clean_fileid_89.wav"></audio></td>
+                        <td><audio controls src="data/MGM/DNS-With-Reverb/clean/clean_fileid_89.wav"></audio></td>
+                      </tr>
+
+                    </tbody>
+                  </table>
+                  * Clean audios contain reverb (DNS focuses solely on denoising, while speech restoration also handle dereverberation)
+                </div>
+              </div>
+            </div>
+            <div id="mgm-librivox" class="mgm-dataset-content hidden">
+              <div class="w-full overflow-x-auto">
+                <div class="relative w-[1000px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+                  <table class="demo-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 25%;">Noisy</th>
+                        <th style="width: 25%;">w/ Align</th>
+                        <th style="width: 25%;">w/o Align</th>
+                        <th style="width: 25%;">Clean</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- 145.wav 191.wav 192.wav 23.wav 260.wav 30.wav 402.wav 41.wav 417.wav 76.wav   -->
+                      <!-- Sample: 145 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Librivox-GSR/noisy/145.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/after/145.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/before/145.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/clean/145.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Librivox-GSR/noisy/145.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/after/145.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/before/145.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/clean/145.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 191 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Librivox-GSR/noisy/191.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/after/191.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/before/191.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/clean/191.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Librivox-GSR/noisy/191.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/after/191.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/before/191.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/clean/191.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 192 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Librivox-GSR/noisy/192.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/after/192.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/before/192.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/clean/192.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Librivox-GSR/noisy/192.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/after/192.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/before/192.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/clean/192.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 23 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Librivox-GSR/noisy/23.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/after/23.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/before/23.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/clean/23.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Librivox-GSR/noisy/23.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/after/23.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/before/23.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/clean/23.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 260 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Librivox-GSR/noisy/260.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/after/260.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/before/260.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/clean/260.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Librivox-GSR/noisy/260.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/after/260.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/before/260.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/clean/260.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 30 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Librivox-GSR/noisy/30.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/after/30.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/before/30.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/clean/30.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Librivox-GSR/noisy/30.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/after/30.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/before/30.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/clean/30.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 402 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Librivox-GSR/noisy/402.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/after/402.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/before/402.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/clean/402.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Librivox-GSR/noisy/402.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/after/402.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/before/402.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/clean/402.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 41 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Librivox-GSR/noisy/41.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/after/41.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/before/41.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/clean/41.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Librivox-GSR/noisy/41.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/after/41.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/before/41.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/clean/41.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 417 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Librivox-GSR/noisy/417.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/after/417.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/before/417.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/clean/417.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Librivox-GSR/noisy/417.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/after/417.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/before/417.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/clean/417.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 76 -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Librivox-GSR/noisy/76.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/after/76.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/before/76.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Librivox-GSR/clean/76.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Librivox-GSR/noisy/76.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/after/76.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/before/76.wav"></audio></td>
+                        <td><audio controls src="data/MGM/Librivox-GSR/clean/76.wav"></audio></td>
+                      </tr>
+
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div id="mgm-voicefixer" class="mgm-dataset-content hidden">
+              <div class="w-full overflow-x-auto">
+                <div class="relative w-[1000px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+                  <table class="demo-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 25%;">Noisy</th>
+                        <th style="width: 25%;">w/ Align</th>
+                        <th style="width: 25%;">w/o Align</th>
+                        <th style="width: 25%;">Clean</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- 127_simulated.flac 158_simulated.flac 205_simulated.flac 247_simulated.flac 28_simulated.flac 340_simulated.flac 360_simulated.flac 443_simulated.flac 472_simulated.flac 98_simulated.flac   -->
+                      <!-- Sample: 127_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Voicefixer-GSR/noisy/127_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/after/127_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/before/127_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/clean/127_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/noisy/127_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/after/127_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/before/127_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/clean/127_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 158_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Voicefixer-GSR/noisy/158_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/after/158_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/before/158_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/clean/158_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/noisy/158_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/after/158_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/before/158_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/clean/158_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 205_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Voicefixer-GSR/noisy/205_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/after/205_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/before/205_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/clean/205_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/noisy/205_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/after/205_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/before/205_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/clean/205_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 247_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Voicefixer-GSR/noisy/247_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/after/247_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/before/247_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/clean/247_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/noisy/247_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/after/247_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/before/247_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/clean/247_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 28_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Voicefixer-GSR/noisy/28_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/after/28_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/before/28_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/clean/28_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/noisy/28_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/after/28_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/before/28_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/clean/28_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 340_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Voicefixer-GSR/noisy/340_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/after/340_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/before/340_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/clean/340_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/noisy/340_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/after/340_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/before/340_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/clean/340_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 360_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Voicefixer-GSR/noisy/360_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/after/360_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/before/360_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/clean/360_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/noisy/360_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/after/360_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/before/360_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/clean/360_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 443_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Voicefixer-GSR/noisy/443_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/after/443_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/before/443_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/clean/443_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/noisy/443_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/after/443_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/before/443_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/clean/443_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 472_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Voicefixer-GSR/noisy/472_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/after/472_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/before/472_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/clean/472_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/noisy/472_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/after/472_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/before/472_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/clean/472_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 98_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/MGM/Voicefixer-GSR/noisy/98_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/after/98_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/before/98_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/MGM/Voicefixer-GSR/clean/98_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/noisy/98_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/after/98_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/before/98_simulated.flac"></audio></td>
+                        <td><audio controls src="data/MGM/Voicefixer-GSR/clean/98_simulated.flac"></audio></td>
+                      </tr>
+
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flow Matching(FM) Section -->
+        <div class="mt-8 mb-8" id="fm">
+          <h5>Flow Matching(FM)</h5>
+          FM models learn a velocity field that maps noise to clean speech along a continuous path, minimizing the difference between predicted and true flow directions.
+          <!-- Tabs -->
+          <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="fm-tabs" role="tablist">
+              <li class="me-2" role="presentation">
+                <button class="fm-tab-btn inline-block p-4 border-b-2 rounded-t-lg" type="button" role="tab"
+                  onclick="showDataset('fm', 'dns', this)">DNS-With-Reverb</button>
+              </li>
+              <li class="me-2" role="presentation">
+                <button class="fm-tab-btn inline-block p-4 border-b-2 rounded-t-lg" type="button" role="tab"
+                  onclick="showDataset('fm', 'librivox', this)">Librivox-GSR</button>
+              </li>
+              <li class="me-2" role="presentation">
+                <button class="fm-tab-btn inline-block p-4 border-b-2 rounded-t-lg" type="button" role="tab"
+                  onclick="showDataset('fm', 'voicefixer', this)">Voicefixer-GSR</button>
+              </li>
+            </ul>
+          </div>
+          <!-- Tab Content -->
+          <div id="fm-tab-content">
+            <div id="fm-dns" class="fm-dataset-content hidden">
+              <div class="w-full overflow-x-auto">
+                <div class="relative w-[1000px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+                  <table class="demo-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 25%;">Noisy</th>
+                        <th style="width: 25%;">w/ Align</th>
+                        <th style="width: 25%;">w/o Align</th>
+                        <th style="width: 25%;">Clean*</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+
+                      <!-- clean_fileid_101.wav clean_fileid_173.wav clean_fileid_23.wav clean_fileid_231.wav clean_fileid_238.wav clean_fileid_293.wav clean_fileid_44.wav clean_fileid_49.wav clean_fileid_50.wav clean_fileid_90.wav   -->
+                      <!-- Sample: clean_fileid_101 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/DNS-With-Reverb/noisy/clean_fileid_101.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/after/clean_fileid_101.png" alt="After Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/before/clean_fileid_101.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/clean/clean_fileid_101.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/noisy/clean_fileid_101.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/after/clean_fileid_101.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/before/clean_fileid_101.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/clean/clean_fileid_101.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_173 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/DNS-With-Reverb/noisy/clean_fileid_173.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/after/clean_fileid_173.png" alt="After Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/before/clean_fileid_173.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/clean/clean_fileid_173.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/noisy/clean_fileid_173.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/after/clean_fileid_173.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/before/clean_fileid_173.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/clean/clean_fileid_173.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_23 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/DNS-With-Reverb/noisy/clean_fileid_23.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/after/clean_fileid_23.png" alt="After Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/before/clean_fileid_23.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/clean/clean_fileid_23.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/noisy/clean_fileid_23.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/after/clean_fileid_23.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/before/clean_fileid_23.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/clean/clean_fileid_23.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_231 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/DNS-With-Reverb/noisy/clean_fileid_231.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/after/clean_fileid_231.png" alt="After Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/before/clean_fileid_231.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/clean/clean_fileid_231.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/noisy/clean_fileid_231.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/after/clean_fileid_231.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/before/clean_fileid_231.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/clean/clean_fileid_231.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_238 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/DNS-With-Reverb/noisy/clean_fileid_238.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/after/clean_fileid_238.png" alt="After Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/before/clean_fileid_238.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/clean/clean_fileid_238.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/noisy/clean_fileid_238.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/after/clean_fileid_238.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/before/clean_fileid_238.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/clean/clean_fileid_238.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_293 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/DNS-With-Reverb/noisy/clean_fileid_293.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/after/clean_fileid_293.png" alt="After Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/before/clean_fileid_293.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/clean/clean_fileid_293.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/noisy/clean_fileid_293.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/after/clean_fileid_293.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/before/clean_fileid_293.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/clean/clean_fileid_293.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_44 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/DNS-With-Reverb/noisy/clean_fileid_44.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/after/clean_fileid_44.png" alt="After Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/before/clean_fileid_44.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/clean/clean_fileid_44.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/noisy/clean_fileid_44.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/after/clean_fileid_44.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/before/clean_fileid_44.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/clean/clean_fileid_44.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_49 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/DNS-With-Reverb/noisy/clean_fileid_49.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/after/clean_fileid_49.png" alt="After Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/before/clean_fileid_49.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/clean/clean_fileid_49.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/noisy/clean_fileid_49.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/after/clean_fileid_49.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/before/clean_fileid_49.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/clean/clean_fileid_49.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_50 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/DNS-With-Reverb/noisy/clean_fileid_50.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/after/clean_fileid_50.png" alt="After Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/before/clean_fileid_50.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/clean/clean_fileid_50.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/noisy/clean_fileid_50.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/after/clean_fileid_50.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/before/clean_fileid_50.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/clean/clean_fileid_50.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: clean_fileid_90 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/DNS-With-Reverb/noisy/clean_fileid_90.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/after/clean_fileid_90.png" alt="After Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/before/clean_fileid_90.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/DNS-With-Reverb/clean/clean_fileid_90.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/noisy/clean_fileid_90.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/after/clean_fileid_90.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/before/clean_fileid_90.wav"></audio></td>
+                        <td><audio controls src="data/FM/DNS-With-Reverb/clean/clean_fileid_90.wav"></audio></td>
+                      </tr>
+
+                    </tbody>
+                  </table>
+                  * Clean audios contain reverb (DNS focuses solely on denoising, while speech restoration also handle dereverberation)
+                </div>
+              </div>
+            </div>
+            <div id="fm-librivox" class="fm-dataset-content hidden">
+              <div class="w-full overflow-x-auto">
+                <div class="relative w-[1000px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+                  <table class="demo-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 25%;">Noisy</th>
+                        <th style="width: 25%;">w/ Align</th>
+                        <th style="width: 25%;">w/o Align</th>
+                        <th style="width: 25%;">Clean</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- 203.wav 274.wav 288.wav 295.wav 298.wav 382.wav 390.wav 444.wav 84.wav 99.wav    -->
+                      <!-- Sample: 203 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Librivox-GSR/noisy/203.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/after/203.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/before/203.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/clean/203.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Librivox-GSR/noisy/203.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/after/203.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/before/203.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/clean/203.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 274 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Librivox-GSR/noisy/274.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/after/274.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/before/274.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/clean/274.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Librivox-GSR/noisy/274.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/after/274.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/before/274.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/clean/274.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 288 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Librivox-GSR/noisy/288.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/after/288.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/before/288.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/clean/288.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Librivox-GSR/noisy/288.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/after/288.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/before/288.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/clean/288.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 295 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Librivox-GSR/noisy/295.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/after/295.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/before/295.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/clean/295.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Librivox-GSR/noisy/295.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/after/295.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/before/295.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/clean/295.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 298 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Librivox-GSR/noisy/298.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/after/298.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/before/298.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/clean/298.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Librivox-GSR/noisy/298.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/after/298.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/before/298.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/clean/298.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 382 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Librivox-GSR/noisy/382.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/after/382.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/before/382.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/clean/382.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Librivox-GSR/noisy/382.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/after/382.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/before/382.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/clean/382.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 390 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Librivox-GSR/noisy/390.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/after/390.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/before/390.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/clean/390.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Librivox-GSR/noisy/390.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/after/390.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/before/390.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/clean/390.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 444 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Librivox-GSR/noisy/444.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/after/444.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/before/444.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/clean/444.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Librivox-GSR/noisy/444.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/after/444.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/before/444.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/clean/444.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 84 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Librivox-GSR/noisy/84.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/after/84.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/before/84.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/clean/84.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Librivox-GSR/noisy/84.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/after/84.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/before/84.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/clean/84.wav"></audio></td>
+                      </tr>
+                      <!-- Sample: 99 -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Librivox-GSR/noisy/99.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/after/99.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/before/99.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Librivox-GSR/clean/99.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Librivox-GSR/noisy/99.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/after/99.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/before/99.wav"></audio></td>
+                        <td><audio controls src="data/FM/Librivox-GSR/clean/99.wav"></audio></td>
+                      </tr>
+
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div id="fm-voicefixer" class="fm-dataset-content hidden">
+              <div class="w-full overflow-x-auto">
+                <div class="relative w-[1000px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+                  <table class="demo-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 25%;">Noisy</th>
+                        <th style="width: 25%;">w/ Align</th>
+                        <th style="width: 25%;">w/o Align</th>
+                        <th style="width: 25%;">Clean</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- 129_simulated.flac 12_simulated.flac 230_simulated.flac 288_simulated.flac 347_simulated.flac 369_simulated.flac 385_simulated.flac 443_simulated.flac 445_simulated.flac 450_simulated.flac    -->
+                      <!-- Sample: 129_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Voicefixer-GSR/noisy/129_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/after/129_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/before/129_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/clean/129_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/noisy/129_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/after/129_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/before/129_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/clean/129_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 12_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Voicefixer-GSR/noisy/12_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/after/12_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/before/12_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/clean/12_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/noisy/12_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/after/12_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/before/12_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/clean/12_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 230_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Voicefixer-GSR/noisy/230_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/after/230_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/before/230_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/clean/230_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/noisy/230_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/after/230_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/before/230_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/clean/230_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 288_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Voicefixer-GSR/noisy/288_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/after/288_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/before/288_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/clean/288_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/noisy/288_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/after/288_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/before/288_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/clean/288_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 347_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Voicefixer-GSR/noisy/347_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/after/347_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/before/347_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/clean/347_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/noisy/347_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/after/347_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/before/347_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/clean/347_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 369_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Voicefixer-GSR/noisy/369_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/after/369_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/before/369_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/clean/369_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/noisy/369_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/after/369_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/before/369_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/clean/369_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 385_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Voicefixer-GSR/noisy/385_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/after/385_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/before/385_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/clean/385_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/noisy/385_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/after/385_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/before/385_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/clean/385_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 443_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Voicefixer-GSR/noisy/443_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/after/443_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/before/443_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/clean/443_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/noisy/443_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/after/443_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/before/443_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/clean/443_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 445_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Voicefixer-GSR/noisy/445_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/after/445_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/before/445_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/clean/445_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/noisy/445_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/after/445_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/before/445_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/clean/445_simulated.flac"></audio></td>
+                      </tr>
+                      <!-- Sample: 450_simulated -->
+                      <tr class="spec-row">
+                        <td><img src="data/FM/Voicefixer-GSR/noisy/450_simulated.png" alt="Noisy Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/after/450_simulated.png" alt="After Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/before/450_simulated.png" alt="Before Spec"></td>
+                        <td><img src="data/FM/Voicefixer-GSR/clean/450_simulated.png" alt="Clean Spec"></td>
+                      </tr>
+                      <tr>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/noisy/450_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/after/450_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/before/450_simulated.flac"></audio></td>
+                        <td><audio controls src="data/FM/Voicefixer-GSR/clean/450_simulated.flac"></audio></td>
+                      </tr>
+
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showDataset(modelPrefix, datasetId, clickedButton) {
+      // Hide all content divs for the specific model
+      const allContent = document.querySelectorAll(`.${modelPrefix}-dataset-content`);
+      allContent.forEach(div => div.classList.add('hidden'));
+
+      // Show the selected content div
+      const selectedContent = document.getElementById(`${modelPrefix}-${datasetId}`);
+      if (selectedContent) {
+        selectedContent.classList.remove('hidden');
+      }
+
+      // Handle button active state
+      // Get all buttons within the same tab group (ul)
+      const allButtons = clickedButton.parentElement.parentElement.querySelectorAll('button');
+      allButtons.forEach(button => {
+        // Reset styles for all buttons in this group
+        button.classList.remove('text-blue-600', 'border-blue-600', 'dark:text-blue-500', 'dark:border-blue-500');
+        button.classList.add('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300',
+          'dark:hover:text-gray-300');
+        button.setAttribute('aria-selected', 'false');
+      });
+
+      // Apply active styles to the clicked button
+      clickedButton.classList.add('text-blue-600', 'border-blue-600', 'dark:text-blue-500', 'dark:border-blue-500');
+      clickedButton.classList.remove('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300',
+        'dark:hover:text-gray-300');
+      clickedButton.setAttribute('aria-selected', 'true');
+    }
+
+    // Set the initial state on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set the first tab as active for each model section
+      const arFirstButton = document.querySelector('#ar-tabs button');
+      if (arFirstButton) {
+        showDataset('ar', 'dns', arFirstButton);
+      }
+
+      const mgmFirstButton = document.querySelector('#mgm-tabs button');
+      if (mgmFirstButton) {
+        showDataset('mgm', 'dns', mgmFirstButton);
+      }
+
+      const fmFirstButton = document.querySelector('#fm-tabs button');
+      if (fmFirstButton) {
+        showDataset('fm', 'dns', fmFirstButton);
+      }
+    });
+  </script>
+
+</body>
+
+</html>
